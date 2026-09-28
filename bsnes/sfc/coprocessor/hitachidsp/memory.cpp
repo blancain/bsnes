@@ -24,6 +24,17 @@ auto HitachiDSP::write(uint address, uint8 data) -> void {
 //
 
 auto HitachiDSP::addressROM(uint address) const -> maybe<uint> {
+  //SO96 (12 MB): the DSP reads ROM through the CPU's own map -- every bank's upper half is
+  //bank x 32 KB, the lower half of an A22=1 bank ($40-7f, $c0-ff) is the top 4 MB. The lower
+  //half of an A22=0 bank stays not-ROM, so DMA into data RAM is not mistaken for a ROM copy.
+  if(rom.size() >= 0xc00000) {
+    uint linear;
+    if(address & 0x8000) linear = (address & 0xff0000) >> 1 | (address & 0x7fff);
+    else if(address & 0x400000) linear = 0x800000 | (address & 0x800000) >> 2 | (address & 0x3f0000) >> 1 | (address & 0x7fff);
+    else return nothing;
+    if(linear < rom.size()) return {linear};
+    return nothing;
+  }
   if(Mapping == 0) {
     //00-3f,80-bf:8000-ffff; c0-ff:0000-ffff
     if((address & 0x408000) == 0x008000 || (address & 0xc00000) == 0xc00000) {

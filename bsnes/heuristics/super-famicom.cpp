@@ -45,8 +45,10 @@ SuperFamicom::SuperFamicom(vector<uint8_t>& data, string location) : data(data),
 
   uint LoROM   = scoreHeader(  0x7fb0);
   uint HiROM   = scoreHeader(  0xffb0);
-  uint ExLoROM = scoreHeader(0x407fb0);
-  uint ExHiROM = scoreHeader(0x40ffb0);
+  //a 12 MB (96 Mbit) image is the SO96 Cx4 board, a LoROM layout: its data at 0x407fb0 or
+  //0x40ffb0 is never an ExLoROM/ExHiROM header
+  uint ExLoROM = data.size() < 0xc00000 ? scoreHeader(0x407fb0) : 0;
+  uint ExHiROM = data.size() < 0xc00000 ? scoreHeader(0x40ffb0) : 0;
   if(ExLoROM) ExLoROM += 4;
   if(ExHiROM) ExHiROM += 4;
 
@@ -301,7 +303,12 @@ auto SuperFamicom::board() const -> string {
     if(cartridgeTypeHi == 0xf && cartridgeTypeLo == 0x9 && cartridgeSubType == 0x00) board.append("SPC7110-"), epsonRTC = true;
     if(cartridgeTypeHi == 0xf                           && cartridgeSubType == 0x01) board.append("EXNEC-", mode);
     if(cartridgeTypeHi == 0xf                           && cartridgeSubType == 0x02) board.append("ARM-", mode);
-    if(cartridgeTypeHi == 0xf                           && cartridgeSubType == 0x10) board.append("HITACHI-", mode);
+    if(cartridgeTypeHi == 0xf                           && cartridgeSubType == 0x10) {
+      board.append("HITACHI-", mode);
+      //96 Mbit is not a power of two, so no header ROM-size byte can state it: the SO96 board
+      //is selected by file size, as the SD2SNES firmware selects its mapper
+      if(data.size() >= 0xc00000) board.append("SO96-");
+    }
   }
   if(!board) board.append(mode);
 

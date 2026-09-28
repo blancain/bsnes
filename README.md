@@ -1,6 +1,14 @@
 bsnes
 =====
 
+> **This is a fork by Blancain.** The `blancain-runtime` branch adds one commit to
+> upstream bsnes: support for the Cx4 **SO96** board, so 12 MB (96 Mbit) Cx4 images run.
+> Such an image is recognised by its file size, as the SD2SNES firmware does, and the Cx4
+> reads ROM through the CPU's own map. Stock Cx4 games are unaffected.
+> Build exactly as upstream, below; the libretro core is `make -C bsnes target=libretro`.
+> The changes are GPL-3.0, like the rest of bsnes.
+> Upstream: https://github.com/bsnes-emu/bsnes
+
 ![bsnes logo](bsnes/target-bsnes/resource/logo.png)
 
 bsnes is a multi-platform Super Nintendo (Super Famicom) emulator, originally
